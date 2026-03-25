@@ -18,8 +18,8 @@ model_names = ['GPT-4o', 'GPT-5.2', 'Gemini-3', 'Sonnet-4.5', 'Human']
 # =============================================================================
 fig, ax = plt.subplots(figsize=(10, 8))
 
-# Create mask for NaN (diagonal for single-run models)
-mask = np.zeros_like(global_matrix.values, dtype=bool)
+# Mask the lower triangle (keep diagonal + upper triangle)
+mask = np.tril(np.ones_like(global_matrix.values, dtype=bool), k=-1)
 
 # Create annotation labels
 annot = global_matrix.values.copy()
@@ -31,9 +31,10 @@ for i in range(len(model_names)):
         else:
             annot_labels[i, j] = f'{annot[i, j]:.3f}'
 
-# Plot heatmap without annotations first
+# Plot heatmap with lower-triangle mask
 heatmap = sns.heatmap(global_matrix,
                       annot=False,
+                      mask=mask,
                       cmap='RdYlGn',
                       vmin=0, vmax=1,
                       square=True,
@@ -41,9 +42,11 @@ heatmap = sns.heatmap(global_matrix,
                       cbar_kws={'label': ''},
                       ax=ax)
 
-# Manually add text annotations to ensure they all appear
+# Manually add text annotations (skip masked lower triangle)
 for i in range(len(model_names)):
     for j in range(len(model_names)):
+        if mask[i, j]:
+            continue
         text = annot_labels[i, j]
         if text:
             # Determine text color based on background value
